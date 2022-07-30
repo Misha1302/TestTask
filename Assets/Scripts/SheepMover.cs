@@ -12,24 +12,25 @@ public class SheepMover : MonoBehaviour
 {
     public Transform player;
 
-    [Header("Speed")] [SerializeField] private float calmSpeed = 0.5f;
-
+    [Header("Speed")] 
+    [SerializeField] private float calmSpeed = 0.5f;
     [SerializeField] private float escapeSpeed = 4;
     [SerializeField] private float horrorSpeed = 6;
 
-    [Header("Distance")] [SerializeField] private float horrorDistance = 10;
-
+    [Header("Distance")] 
+    [SerializeField] private float horrorDistance = 10;
     [SerializeField] private float alertDistance = 15;
     [SerializeField] private float calmDistance = 20;
     [SerializeField] private float calmDistanceWalk = 4;
 
-    [Header("Time in seconds")] [SerializeField]
-    private float changeDestinationSecondsOnCalm = 1;
-
+    [Header("Time in seconds")] 
+    [SerializeField] private float changeDestinationSecondsOnCalm = 1;
     [SerializeField] private float changeDestinationSecondsOnEscape = 0.5f;
     [SerializeField] private float changeDestinationSecondsOnHorror = 2;
 
-    [Header("Other")] [SerializeField] private Transform[] escapePointsOnHorror;
+    [Header("Other")] 
+    [SerializeField] private Transform[] escapePointsOnHorror;
+    [SerializeField] private string playerTag = "Player";
 
 
     private Vector3 _gizmosDestinationPosition;
@@ -156,7 +157,7 @@ public class SheepMover : MonoBehaviour
         for (var i = 1; i < nearestPoints.Count; i++)
             if (Physics.Linecast(transform.position, nearestPoints[i].escapePointOnHorror.position, out var hit))
             {
-                if (!hit.transform.tag.Equals("Player"))
+                if (!hit.transform.CompareTag(playerTag))
                     return nearestPoints[i].escapePointOnHorror.position;
             }
             else

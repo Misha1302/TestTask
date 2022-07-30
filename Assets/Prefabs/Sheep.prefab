@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 2035292140}
   m_Layer: 2
   m_Name: Sheep
-  m_TagString: Untagged
+  m_TagString: Sheep
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -137,6 +137,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  playerTag: 
 --- !u!54 &1515997921582088243
 Rigidbody:
   m_ObjectHideFlags: 0
