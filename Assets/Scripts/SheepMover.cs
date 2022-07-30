@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(NavMeshAgent))]
-public class SheepMove : MonoBehaviour
+public class SheepMover : MonoBehaviour
 {
     public Transform player;
 

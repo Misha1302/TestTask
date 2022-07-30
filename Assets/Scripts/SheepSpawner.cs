@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpawnSheep : MonoBehaviour
+public class SheepSpawner : MonoBehaviour
 {
     [SerializeField] private Transform sheepParent;
     [SerializeField] private Transform sheepPrefab;
