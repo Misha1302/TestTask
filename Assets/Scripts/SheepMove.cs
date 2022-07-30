@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
@@ -10,42 +12,41 @@ public class SheepMove : MonoBehaviour
 {
     public Transform player;
 
-    [Header("Speed")] [SerializeField] private float calmSpeed = 2;
+    [Header("Speed")] [SerializeField] private float calmSpeed = 0.5f;
 
-    [SerializeField] private float escapeSpeed = 12;
-    [SerializeField] private float horrorSpeed = 20;
+    [SerializeField] private float escapeSpeed = 4;
+    [SerializeField] private float horrorSpeed = 6;
 
-    [Header("Distance")] [SerializeField] private float alertDistance = 2;
+    [Header("Distance")] [SerializeField] private float horrorDistance = 10;
 
-    [SerializeField] private float calmDistance = 4;
+    [SerializeField] private float alertDistance = 15;
+    [SerializeField] private float calmDistance = 20;
     [SerializeField] private float calmDistanceWalk = 4;
 
     [Header("Time in seconds")] [SerializeField]
     private float changeDestinationSecondsOnCalm = 1;
 
     [SerializeField] private float changeDestinationSecondsOnEscape = 0.5f;
-    [SerializeField] private float changeDestinationSecondsOnFright = 2;
+    [SerializeField] private float changeDestinationSecondsOnHorror = 2;
+
+    [Header("Other")] [SerializeField] private Transform[] escapePointsOnHorror;
 
 
-    private Rigidbody currentSheepRigidbody;
+    private Vector3 _gizmosDestinationPosition;
+    private NavMeshAgent _navMeshAgent;
+    private SheepState _sheepState;
 
-    private Vector3 gizmosDestinationPosition;
-
-    private NavMeshAgent navMeshAgent;
-
-    private SheepState sheepState;
 
     private void Start()
     {
-        navMeshAgent = GetComponent<NavMeshAgent>();
-        sheepState = SheepState.Calm;
+        _navMeshAgent = GetComponent<NavMeshAgent>();
+        _sheepState = SheepState.Calm;
         StartCoroutine(SlowFixedUpdate());
-        StartCoroutine(CheckPathPerPlayer());
     }
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawLine(transform.position, gizmosDestinationPosition);
+        Gizmos.DrawLine(transform.position, _gizmosDestinationPosition);
     }
 
     private IEnumerator SlowFixedUpdate()
@@ -53,7 +54,7 @@ public class SheepMove : MonoBehaviour
         while (true)
         {
             float waitSeconds = -1;
-            switch (sheepState)
+            switch (_sheepState)
             {
                 case SheepState.Calm:
                     waitSeconds = changeDestinationSecondsOnCalm;
@@ -61,11 +62,11 @@ public class SheepMove : MonoBehaviour
                 case SheepState.Escape:
                     waitSeconds = changeDestinationSecondsOnEscape;
                     break;
-                case SheepState.Fright:
-                    waitSeconds = changeDestinationSecondsOnFright;
+                case SheepState.Horror:
+                    waitSeconds = changeDestinationSecondsOnHorror;
                     break;
                 default:
-                    Debug.LogException(new Exception($"{sheepState} not found"));
+                    Debug.LogException(new Exception($"{_sheepState} not found"));
                     break;
             }
 
@@ -73,39 +74,50 @@ public class SheepMove : MonoBehaviour
 
             var distanceBetweenPlayerAndSheep = GetDistance(player.position, transform.position);
 
-            if (distanceBetweenPlayerAndSheep > calmDistance) sheepState = SheepState.Calm;
-            else if (distanceBetweenPlayerAndSheep < alertDistance) sheepState = SheepState.Escape;
+            if (distanceBetweenPlayerAndSheep < horrorDistance) _sheepState = SheepState.Horror;
+            else if (distanceBetweenPlayerAndSheep < alertDistance) _sheepState = SheepState.Escape;
+            else if (distanceBetweenPlayerAndSheep > calmDistance) _sheepState = SheepState.Calm;
 
-            if (sheepState == SheepState.Escape) OnSheepEscape();
-            else OnSheepCalm();
+            switch (_sheepState)
+            {
+                case SheepState.Escape:
+                    OnSheepEscape();
+                    break;
+                case SheepState.Horror:
+                    OnSheepHorror();
+                    break;
+                default:
+                    OnSheepCalm();
+                    break;
+            }
         }
     }
 
-    private IEnumerator CheckPathPerPlayer()
+
+    private void OnSheepHorror()
     {
-        while (true)
-        {
-            yield return new WaitForSeconds(0.05f);
-            if (Physics.Raycast(transform.position, transform.forward, out var hit, 10))
-                if (hit.transform.tag.Equals("Player"))
-                {
-                    var randomDestination = SheepFrightedRandomDestination();
-                    gizmosDestinationPosition = randomDestination;
-                    navMeshAgent.SetDestination(randomDestination);
-                }
-        }
+        _navMeshAgent.speed = horrorSpeed;
+        _navMeshAgent.SetDestination(GetRandomDestinationOnHorror());
     }
+
+    private Vector3 GetRandomDestinationOnHorror()
+    {
+        var randomDestination = SheepFrightedRandomDestination();
+        _gizmosDestinationPosition = randomDestination;
+        return randomDestination;
+    }
+
 
     private void OnSheepCalm()
     {
-        navMeshAgent.speed = calmSpeed;
-        navMeshAgent.SetDestination(GetRandomDestinationOnCalm());
+        _navMeshAgent.speed = calmSpeed;
+        _navMeshAgent.SetDestination(GetRandomDestinationOnCalm());
     }
 
     private void OnSheepEscape()
     {
-        navMeshAgent.SetDestination(GetRandomDestinationOnEscape());
-        navMeshAgent.speed = sheepState == SheepState.Escape ? escapeSpeed : horrorSpeed;
+        _navMeshAgent.speed = escapeSpeed;
+        _navMeshAgent.SetDestination(GetRandomDestinationOnEscape());
     }
 
     private Vector3 GetRandomDestinationOnEscape()
@@ -114,14 +126,8 @@ public class SheepMove : MonoBehaviour
         // there is no point in checking the hit of the raycast because it will hit the wall anyway
         Physics.Raycast(position, position - player.position, out var hit);
         var randomDestination = hit.point;
-        if (GetDistance(randomDestination, transform.position) < 7)
-        {
-            sheepState = SheepState.Fright;
-            gizmosDestinationPosition = randomDestination;
-            return SheepFrightedRandomDestination();
-        }
 
-        gizmosDestinationPosition = randomDestination;
+        _gizmosDestinationPosition = randomDestination;
         return randomDestination;
     }
 
@@ -135,7 +141,7 @@ public class SheepMove : MonoBehaviour
             z = Random.Range(position.z - calmDistanceWalk, position.z + calmDistanceWalk)
         };
 
-        gizmosDestinationPosition = randomDestination;
+        _gizmosDestinationPosition = randomDestination;
         return randomDestination;
     }
 
@@ -146,26 +152,32 @@ public class SheepMove : MonoBehaviour
 
     private Vector3 SheepFrightedRandomDestination()
     {
-        // try to go right
-        var currentTransform = transform;
-        Physics.Raycast(currentTransform.position, currentTransform.right, out var hit);
-        if (GetDistance(hit.point, currentTransform.position) > 5) return hit.point;
+        var nearestPoints = GetNearestPoints();
+        for (var i = 1; i < nearestPoints.Count; i++)
+            if (Physics.Linecast(transform.position, nearestPoints[i].escapePointOnHorror.position, out var hit))
+            {
+                if (!hit.transform.tag.Equals("Player"))
+                    return nearestPoints[i].escapePointOnHorror.position;
+            }
+            else
+            {
+                return nearestPoints[i].escapePointOnHorror.position;
+            }
 
-        // try to go left
-        Physics.Raycast(currentTransform.position, -currentTransform.right, out hit);
-        if (GetDistance(hit.point, currentTransform.position) > 5) return hit.point;
-        return hit.point;
+        return nearestPoints[1].escapePointOnHorror.position;
+    }
 
-        // go to centre
-        print("LKJHGFDS");
-        var randomDestination = new Vector3
-        {
-            x = Random.Range(-10f, 10f),
-            y = 0.75f,
-            z = Random.Range(-10f, 10f)
-        };
+    private List<(float distance, Transform escapePointOnHorror)> GetNearestPoints()
+    {
+        var nearestPointsList = (from escapePointOnHorror in escapePointsOnHorror
+            let distance = GetDistance(escapePointOnHorror.position, transform.position)
+            select (distance, escapePointOnHorror)).ToList();
 
-        gizmosDestinationPosition = randomDestination;
-        return randomDestination;
+        for (var j = 1; j < nearestPointsList.Count; j++)
+        for (var i = 1; i < nearestPointsList.Count; i++)
+            if (nearestPointsList[i - 1].distance > nearestPointsList[i].distance)
+                (nearestPointsList[i - 1], nearestPointsList[i]) = (nearestPointsList[i], nearestPointsList[i - 1]);
+
+        return nearestPointsList;
     }
 }

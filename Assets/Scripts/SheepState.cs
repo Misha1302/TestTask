@@ -1,6 +1,6 @@
 public enum SheepState
 {
-    Fright,
+    Horror,
     Escape,
     Calm
 }
