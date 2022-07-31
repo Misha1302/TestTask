@@ -121,7 +121,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab2e70e8c241ec4b81c624ce0e6d011, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
   calmSpeed: 0.5
   escapeSpeed: 4
   horrorSpeed: 6
@@ -137,7 +136,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  playerTag: 
+  playerTag: Player
 --- !u!54 &1515997921582088243
 Rigidbody:
   m_ObjectHideFlags: 0

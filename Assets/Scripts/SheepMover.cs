@@ -10,8 +10,6 @@ using Random = UnityEngine.Random;
 [RequireComponent(typeof(NavMeshAgent))]
 public class SheepMover : MonoBehaviour
 {
-    public Transform player;
-
     [Header("Speed")] 
     [SerializeField] private float calmSpeed = 0.5f;
     [SerializeField] private float escapeSpeed = 4;
@@ -28,15 +26,14 @@ public class SheepMover : MonoBehaviour
     [SerializeField] private float changeDestinationSecondsOnEscape = 0.5f;
     [SerializeField] private float changeDestinationSecondsOnHorror = 2;
 
-    [Header("Other")] 
-    [SerializeField] private Transform[] escapePointsOnHorror;
-    [SerializeField] private string playerTag = "Player";
-
-
+    
     private Vector3 _gizmosDestinationPosition;
     private NavMeshAgent _navMeshAgent;
+    private Transform _player;
     private SheepState _sheepState;
-
+    private Transform[] _escapePointsOnHorror;
+    private string _playerTag;
+    
 
     private void Start()
     {
@@ -48,6 +45,18 @@ public class SheepMover : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawLine(transform.position, _gizmosDestinationPosition);
+    }
+
+
+    public void SetPlayer(PlayerMover playerMover)
+    {
+        _player = playerMover.transform;
+        _playerTag = _player.tag;
+    }
+    
+    public void SetEscapePointsOnHorror(Transform[] escapePointsOnHorror)
+    {
+        _escapePointsOnHorror = escapePointsOnHorror;
     }
 
     private IEnumerator SlowFixedUpdate()
@@ -73,7 +82,7 @@ public class SheepMover : MonoBehaviour
 
             yield return new WaitForSeconds(waitSeconds);
 
-            var distanceBetweenPlayerAndSheep = GetDistance(player.position, transform.position);
+            var distanceBetweenPlayerAndSheep = GetDistance(_player.position, transform.position);
 
             if (distanceBetweenPlayerAndSheep < horrorDistance) _sheepState = SheepState.Horror;
             else if (distanceBetweenPlayerAndSheep < alertDistance) _sheepState = SheepState.Escape;
@@ -87,7 +96,7 @@ public class SheepMover : MonoBehaviour
                 case SheepState.Horror:
                     OnSheepHorror();
                     break;
-                default:
+                case SheepState.Calm:
                     OnSheepCalm();
                     break;
             }
@@ -95,7 +104,7 @@ public class SheepMover : MonoBehaviour
     }
 
 
-    private void OnSheepHorror()
+    public void OnSheepHorror()
     {
         _navMeshAgent.speed = horrorSpeed;
         _navMeshAgent.SetDestination(GetRandomDestinationOnHorror());
@@ -125,7 +134,7 @@ public class SheepMover : MonoBehaviour
     {
         var position = transform.position;
         // there is no point in checking the hit of the raycast because it will hit the wall anyway
-        Physics.Raycast(position, position - player.position, out var hit);
+        Physics.Raycast(position, position - _player.position, out var hit);
         var randomDestination = hit.point;
 
         _gizmosDestinationPosition = randomDestination;
@@ -157,7 +166,7 @@ public class SheepMover : MonoBehaviour
         for (var i = 1; i < nearestPoints.Count; i++)
             if (Physics.Linecast(transform.position, nearestPoints[i].escapePointOnHorror.position, out var hit))
             {
-                if (!hit.transform.CompareTag(playerTag))
+                if (!hit.transform.CompareTag(_playerTag))
                     return nearestPoints[i].escapePointOnHorror.position;
             }
             else
@@ -170,7 +179,7 @@ public class SheepMover : MonoBehaviour
 
     private List<(float distance, Transform escapePointOnHorror)> GetNearestPoints()
     {
-        var nearestPointsList = (from escapePointOnHorror in escapePointsOnHorror
+        var nearestPointsList = (from escapePointOnHorror in _escapePointsOnHorror
             let distance = GetDistance(escapePointOnHorror.position, transform.position)
             select (distance, escapePointOnHorror)).ToList();
 

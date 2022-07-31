@@ -14,5 +14,12 @@ public class SheepCatcher : MonoBehaviour
 
         _caughtSheepCount++;
         numberOfSheepCaughtText.text = _caughtSheepCount.ToString();
+
+        OnSheepCaught(collision.gameObject);
+    }
+
+    private static void OnSheepCaught(GameObject sheep)
+    {
+        Destroy(sheep);
     }
 }
