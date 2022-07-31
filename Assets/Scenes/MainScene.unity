@@ -544,7 +544,7 @@ MonoBehaviour:
   - {fileID: 1606572297}
   - {fileID: 1594124537}
   - {fileID: 68245596}
-  sheepCount: 25
+  sheepCount: 21
   spawnY: 0.75
   fieldSize: {x: 45, y: 45}
   offsetField: 0
