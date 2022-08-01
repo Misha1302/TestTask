@@ -1,22 +1,19 @@
-using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class CalmState : BaseSheepState
 {
-    private readonly BaseSheepState[] _allSheepStates;
     private readonly float _distanceWalk;
     private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
     private readonly float _speed;
-    private readonly float _sleepTime;
+    private BaseSheepState[] _allSheepStates;
 
-    public CalmState(IStationStateSwitcher stationStateSwitcher, float distanceWalk, float speed, float sleepTime,
+    public CalmState(IStationStateSwitcher stationStateSwitcher, float distanceWalk, float speed,
         Transform sheepTransform,
-        Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState,
-        BaseSheepState[] allSheepStates)
-        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed, sleepTime, allSheepStates)
+        Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState)
+        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed)
     {
         this.navMeshAgent = navMeshAgent;
         this.stationStateSwitcher = stationStateSwitcher;
@@ -27,8 +24,6 @@ public class CalmState : BaseSheepState
         _distanceWalk = distanceWalk;
         _sheepTransform = sheepTransform;
         _speed = speed;
-        _sleepTime = sleepTime;
-        _allSheepStates = allSheepStates;
     }
 
 
@@ -37,39 +32,38 @@ public class CalmState : BaseSheepState
     private protected sealed override NavMeshAgent navMeshAgent { get; set; }
 
 
-    public override void StartState()
+    public sealed override void Go()
     {
-        StartCoroutine(StartStateCoroutine());
-    }
-
-    private IEnumerator StartStateCoroutine()
-    {
-        yield return new WaitForSeconds(0.1f);
-        while (true)
+        if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
+        
+        navMeshAgent.isStopped = false;
+        var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
+        if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
         {
-            var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
-            if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
+            StopState();
+            var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
+            if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
             {
-                StopState();
-                var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
-                if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
-                {
-                    escapeState.StartState();
-                    yield break;
-                }
-
-                var horrorState = _allSheepStates.FirstOrDefault(state => state is HorrorState);
-                if (dist >= horrorState.minMaxDistanceState.x && dist <= horrorState.minMaxDistanceState.y)
-                    horrorState.StartState();
-                yield break;
+                stationStateSwitcher.SwitchState(escapeState);
+                return;
             }
 
-            navMeshAgent.isStopped = false;
-            SetDestination();
-            SetSpeed();
-
-            yield return new WaitForSeconds(_sleepTime);
+            var horrorState = _allSheepStates.FirstOrDefault(state => state is HorrorState);
+            if (dist >= horrorState.minMaxDistanceState.x && dist <= horrorState.minMaxDistanceState.y)
+            {
+                stationStateSwitcher.SwitchState(horrorState);
+                return;
+            }
         }
+
+        navMeshAgent.isStopped = false;
+        SetDestination();
+        SetSpeed();
+    }
+
+    public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    {
+        _allSheepStates = baseSheepStates;
     }
 
     private protected sealed override void SetSpeed()

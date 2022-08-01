@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,21 +5,19 @@ using UnityEngine.AI;
 
 public class HorrorState : BaseSheepState
 {
-    private readonly BaseSheepState[] _allSheepStates;
     private readonly Transform[] _escapePointsOnHorror;
 
     private readonly string _playerTag;
     private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
-    private readonly float _sleepTime;
     private readonly float _speed;
+    private BaseSheepState[] _allSheepStates;
 
 
     public HorrorState(IStationStateSwitcher stationStateSwitcher, Transform sheepTransform, float speed,
-        float sleepTime,
         Transform playerTransform, Transform[] escapePointsOnHorror, NavMeshAgent navMeshAgent,
-        Vector2 minMaxDistanceState, BaseSheepState[] allSheepStates)
-        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed, sleepTime, allSheepStates)
+        Vector2 minMaxDistanceState)
+        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed)
     {
         this.navMeshAgent = navMeshAgent;
         this.stationStateSwitcher = stationStateSwitcher;
@@ -31,8 +28,6 @@ public class HorrorState : BaseSheepState
         _sheepTransform = sheepTransform;
         _escapePointsOnHorror = escapePointsOnHorror;
         _speed = speed;
-        _sleepTime = sleepTime;
-        _allSheepStates = allSheepStates;
 
         _playerTag = _playerTransform.tag;
     }
@@ -43,38 +38,33 @@ public class HorrorState : BaseSheepState
     public sealed override Vector2 minMaxDistanceState { get; }
 
 
-    public sealed override void StartState()
+    public sealed override void Go()
     {
-        StartCoroutine(StartStateCoroutine());
-    }
-
-    private IEnumerator StartStateCoroutine()
-    {
-        yield return new WaitForSeconds(0.1f);
-        while (true)
+        if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
+        
+        navMeshAgent.isStopped = false;
+        var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
+        if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
         {
-            navMeshAgent.isStopped = false;
-            var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
-            if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
+            StopState();
+            var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
+            if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
             {
-                StopState();
-                var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
-                if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
-                {
-                    escapeState.StartState();
-                    yield break;
-                }
-
-                var calmState = _allSheepStates.FirstOrDefault(state => state is CalmState);
-                if (dist >= calmState.minMaxDistanceState.x && dist <= calmState.minMaxDistanceState.y)
-                    calmState.StartState();
-                yield break;
+                stationStateSwitcher.SwitchState(escapeState);
+                return;
             }
 
-            navMeshAgent.isStopped = false;
-            SetDestination();
-            SetSpeed();
+            var calmState = _allSheepStates.FirstOrDefault(state => state is CalmState);
+            if (dist >= calmState.minMaxDistanceState.x && dist <= calmState.minMaxDistanceState.y)
+            {
+                stationStateSwitcher.SwitchState(calmState);
+                return;
+            }
         }
+
+        navMeshAgent.isStopped = false;
+        SetDestination();
+        SetSpeed();
     }
 
     public sealed override void StopState()
@@ -85,6 +75,11 @@ public class HorrorState : BaseSheepState
     private protected sealed override void SetSpeed()
     {
         navMeshAgent.speed = _speed;
+    }
+
+    public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    {
+        _allSheepStates = baseSheepStates;
     }
 
     private protected sealed override void SetDestination()

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
@@ -37,29 +38,46 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
     {
         _navMeshAgent = GetComponent<NavMeshAgent>();
 
+        _navMeshAgent.stoppingDistance = 1;
+        
         var currentTransform = transform;
 
         _allBaseSheepStates = new BaseSheepState[]
         {
-            new CalmState(this, 4, calmSpeed, changeDestinationSecondsOnCalm, currentTransform, _player, _navMeshAgent,
-                new Vector2(calmDistance, int.MaxValue), _allBaseSheepStates),
+            new CalmState(this, 4, calmSpeed, currentTransform, _player, _navMeshAgent,
+                new Vector2(calmDistance, int.MaxValue)),
 
-            new EscapeState(this, currentTransform, escapeSpeed, changeDestinationSecondsOnEscape, _player,
-                _navMeshAgent, new Vector2(horrorDistance, escapeDistance), _allBaseSheepStates),
+            new EscapeState(this, currentTransform, escapeSpeed, _player,
+                _navMeshAgent, new Vector2(horrorDistance, escapeDistance)),
 
-            new HorrorState(this, currentTransform, horrorSpeed, changeDestinationSecondsOnHorror, _player,
-                _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, horrorDistance), _allBaseSheepStates)
+            new HorrorState(this, currentTransform, horrorSpeed, _player,
+                _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, horrorDistance))
         };
 
+        foreach (var baseSheepState in _allBaseSheepStates)
+        {
+            baseSheepState.SetAllSheepStates(_allBaseSheepStates);
+        }
+
         _currentSheepState = _allBaseSheepStates[0];
-        _currentSheepState.StartState();
+        _currentSheepState.Go();
     }
 
-    public void SwitchState<T>() where T : BaseSheepState
+    private void Update()
+    {
+        _currentSheepState.Go();
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(transform.position, _navMeshAgent.destination);
+    }
+
+    public void SwitchState(BaseSheepState sheepState)
     {
         _currentSheepState.StopState();
-        _currentSheepState = _allBaseSheepStates.FirstOrDefault(state => state is T);
-        _currentSheepState.StartState();
+        _currentSheepState = sheepState;
+        _currentSheepState.Go();
     }
 
 
