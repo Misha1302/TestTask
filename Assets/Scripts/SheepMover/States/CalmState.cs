@@ -7,7 +7,6 @@ public class CalmState : BaseSheepState
     private readonly float _distanceWalk;
     private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
-    private readonly float _speed;
     private BaseSheepState[] _allSheepStates;
 
     public CalmState(IStationStateSwitcher stationStateSwitcher, float distanceWalk, float speed,
@@ -23,14 +22,13 @@ public class CalmState : BaseSheepState
         _playerTransform = playerTransform;
         _distanceWalk = distanceWalk;
         _sheepTransform = sheepTransform;
-        _speed = speed;
+        this.speed = speed;
     }
 
 
     public sealed override Vector2 minMaxDistanceState { get; }
     private protected sealed override IStationStateSwitcher stationStateSwitcher { get; set; }
     private protected sealed override NavMeshAgent navMeshAgent { get; set; }
-
 
 
     public sealed override void Go()
@@ -63,11 +61,6 @@ public class CalmState : BaseSheepState
     public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
-    }
-
-    private protected sealed override void SetSpeed()
-    {
-        navMeshAgent.speed = _speed;
     }
 
     public sealed override void StopState()

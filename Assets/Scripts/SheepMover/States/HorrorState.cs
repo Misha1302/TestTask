@@ -10,7 +10,6 @@ public class HorrorState : BaseSheepState
     private readonly string _playerTag;
     private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
-    private readonly float _speed;
     private BaseSheepState[] _allSheepStates;
 
 
@@ -27,7 +26,7 @@ public class HorrorState : BaseSheepState
         _playerTransform = playerTransform;
         _sheepTransform = sheepTransform;
         _escapePointsOnHorror = escapePointsOnHorror;
-        _speed = speed;
+        this.speed = speed;
 
         _playerTag = _playerTransform.tag;
     }
@@ -69,11 +68,6 @@ public class HorrorState : BaseSheepState
     public sealed override void StopState()
     {
         navMeshAgent.isStopped = true;
-    }
-
-    private protected sealed override void SetSpeed()
-    {
-        navMeshAgent.speed = _speed;
     }
 
     public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)

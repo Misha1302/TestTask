@@ -6,9 +6,9 @@ using UnityEngine.AI;
 public class SheepMover : MonoBehaviour, IStationStateSwitcher
 {
     [Header("Speed")] 
-    [SerializeField] private float calmSpeed = 0.5f;
+    [SerializeField] private float calmSpeed = 0.75f;
     [SerializeField] private float escapeSpeed = 4;
-    [SerializeField] private float horrorSpeed = 6;
+    [SerializeField] private float horrorSpeed = 8;
 
     [Header("Trigger distance")] 
     [SerializeField] private float triggerHorrorDistance = 10;
@@ -38,10 +38,11 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
 
         var currentTransform = transform;
 
+        print(3.40282347E+38f);
         _allBaseSheepStates = new BaseSheepState[]
         {
             new CalmState(this, calmDistanceWalk, calmSpeed, currentTransform, _player, _navMeshAgent,
-                new Vector2(triggerCalmDistance, int.MaxValue)),
+                new Vector2(triggerCalmDistance, float.MaxValue)),
 
             new EscapeState(this, currentTransform, escapeSpeed, _player,
                 _navMeshAgent, new Vector2(triggerHorrorDistance, triggerEscapeDistance)),

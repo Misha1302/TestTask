@@ -7,7 +7,6 @@ public class EscapeState : BaseSheepState
     private readonly Transform _playerTransform;
     private readonly string _playerTag;
     private readonly Transform _sheepTransform;
-    private readonly float _speed;
     private BaseSheepState[] _allSheepStates;
 
 
@@ -22,7 +21,7 @@ public class EscapeState : BaseSheepState
 
         _playerTransform = playerTransform;
         _sheepTransform = sheepTransform;
-        _speed = speed;
+        this.speed = speed;
 
         _playerTag = playerTransform.tag;
     }
@@ -64,12 +63,6 @@ public class EscapeState : BaseSheepState
     {
         navMeshAgent.isStopped = true;
     }
-
-    private protected sealed override void SetSpeed()
-    {
-        navMeshAgent.speed = _speed;
-    }
-
 
     public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
