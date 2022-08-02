@@ -121,15 +121,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab2e70e8c241ec4b81c624ce0e6d011, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  calmSpeed: 1.5
+  calmSpeed: 0.75
   escapeSpeed: 4
-  horrorSpeed: 6
-  horrorDistance: 10
-  escapeDistance: 15
-  calmDistance: 20
-  changeDestinationSecondsOnCalm: 1
-  changeDestinationSecondsOnEscape: 0.1
-  changeDestinationSecondsOnHorror: 2
+  horrorSpeed: 8
+  triggerHorrorDistance: 10
+  triggerEscapeDistance: 15
+  triggerCalmDistance: 20
+  calmDistanceWalk: 4
 --- !u!54 &1515997921582088243
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -14,12 +14,12 @@ public class SheepSpawner : MonoBehaviour
     [SerializeField] private int sheepCount = 21;
     [SerializeField] private float spawnY = 0.75f;
     [SerializeField] private Vector2 fieldSize = new(50, 50);
-    [SerializeField] private float offsetField;
+    [SerializeField] private Vector2 offsetField;
 
     private void Start()
     {
-        var halfFieldWight = fieldSize.x / 2 + offsetField;
-        var halfFieldHeight = fieldSize.y / 2 + offsetField;
+        var halfFieldWight = fieldSize.x / 2 + offsetField.x;
+        var halfFieldHeight = fieldSize.y / 2 + offsetField.y;
         
         for (var i = 0; i < sheepCount; i++)
         {
@@ -30,8 +30,7 @@ public class SheepSpawner : MonoBehaviour
                 z = Random.Range(-halfFieldHeight, halfFieldHeight)
             };
             
-            var newSheep = Instantiate(sheepPrefab, sheepParent);
-            newSheep.transform.position = spawnVector3;
+            var newSheep = Instantiate(sheepPrefab, spawnVector3, Quaternion.identity, sheepParent);
             newSheep.SetPlayer(player);
             newSheep.SetEscapePointsOnHorror(escapePointsOnHorror);
         }

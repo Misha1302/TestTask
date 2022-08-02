@@ -40,22 +40,21 @@ public class HorrorState : BaseSheepState
 
     public sealed override void Go()
     {
-        if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
+        if (!AgentReachedThePoint()) return;
         
         navMeshAgent.isStopped = false;
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
-        if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
+        if (!IsTheDistanceRight(dist))
         {
-            StopState();
-            var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
-            if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
+            var escapeState = _allSheepStates.First(state => state is EscapeState);
+            if (escapeState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(escapeState);
                 return;
             }
 
-            var calmState = _allSheepStates.FirstOrDefault(state => state is CalmState);
-            if (dist >= calmState.minMaxDistanceState.x && dist <= calmState.minMaxDistanceState.y)
+            var calmState = _allSheepStates.First(state => state is CalmState);
+            if (calmState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(calmState);
                 return;

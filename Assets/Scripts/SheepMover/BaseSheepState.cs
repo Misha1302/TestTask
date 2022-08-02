@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,7 +10,7 @@ public abstract class BaseSheepState
         float speed)
     {
     }
-    
+
     public abstract Vector2 minMaxDistanceState { get; }
 
     private protected abstract IStationStateSwitcher stationStateSwitcher { get; set; }
@@ -23,7 +20,17 @@ public abstract class BaseSheepState
     public abstract void Go();
     public abstract void StopState();
     public abstract void SetAllSheepStates(BaseSheepState[] baseSheepStates);
-    
+
+    public bool IsTheDistanceRight(float playerDistance)
+    {
+        return playerDistance >= minMaxDistanceState.x && playerDistance <= minMaxDistanceState.y;
+    }
+
+    private protected bool AgentReachedThePoint()
+    {
+        return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
+    }
+
     private protected abstract void SetSpeed();
     private protected abstract void SetDestination();
 }

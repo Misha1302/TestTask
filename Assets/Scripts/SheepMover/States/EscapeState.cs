@@ -5,6 +5,7 @@ using UnityEngine.AI;
 public class EscapeState : BaseSheepState
 {
     private readonly Transform _playerTransform;
+    private readonly string _playerTag;
     private readonly Transform _sheepTransform;
     private readonly float _speed;
     private BaseSheepState[] _allSheepStates;
@@ -22,6 +23,8 @@ public class EscapeState : BaseSheepState
         _playerTransform = playerTransform;
         _sheepTransform = sheepTransform;
         _speed = speed;
+
+        _playerTag = playerTransform.tag;
     }
 
 
@@ -32,29 +35,27 @@ public class EscapeState : BaseSheepState
 
     public sealed override void Go()
     {
-        if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
+        if (!AgentReachedThePoint()) return;
         
         navMeshAgent.isStopped = false;
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
-        if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
+        if (!IsTheDistanceRight(dist))
         {
-            StopState();
-            var horrorState = _allSheepStates.FirstOrDefault(state => state is HorrorState);
-            if (dist >= horrorState.minMaxDistanceState.x && dist <= horrorState.minMaxDistanceState.y)
+            var horrorState = _allSheepStates.First(state => state is HorrorState);
+            if (horrorState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(horrorState);
                 return;
             }
 
-            var calmState = _allSheepStates.FirstOrDefault(state => state is CalmState);
-            if (dist >= calmState.minMaxDistanceState.x && dist <= calmState.minMaxDistanceState.y)
+            var calmState = _allSheepStates.First(state => state is CalmState);
+            if (calmState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(calmState);
                 return;
             }
         }
 
-        navMeshAgent.isStopped = false;
         SetDestination();
         SetSpeed();
     }
@@ -86,7 +87,7 @@ public class EscapeState : BaseSheepState
         {
             direction.x += 90;
             Physics.Raycast(position, direction, out hit);
-            if (!hit.transform.CompareTag("Player"))
+            if (!hit.transform.CompareTag(_playerTag))
             {
                 navMeshAgent.SetDestination(hit.point);
             }

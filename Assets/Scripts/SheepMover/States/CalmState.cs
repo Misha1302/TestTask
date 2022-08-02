@@ -32,31 +32,30 @@ public class CalmState : BaseSheepState
     private protected sealed override NavMeshAgent navMeshAgent { get; set; }
 
 
+
     public sealed override void Go()
     {
-        if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
-        
+        if (!AgentReachedThePoint()) return;
+
         navMeshAgent.isStopped = false;
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
-        if (dist < minMaxDistanceState.x || dist > minMaxDistanceState.y)
+        if (!IsTheDistanceRight(dist))
         {
-            StopState();
-            var escapeState = _allSheepStates.FirstOrDefault(state => state is EscapeState);
-            if (dist >= escapeState.minMaxDistanceState.x && dist <= escapeState.minMaxDistanceState.y)
+            var escapeState = _allSheepStates.First(state => state is EscapeState);
+            if (escapeState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(escapeState);
                 return;
             }
 
-            var horrorState = _allSheepStates.FirstOrDefault(state => state is HorrorState);
-            if (dist >= horrorState.minMaxDistanceState.x && dist <= horrorState.minMaxDistanceState.y)
+            var horrorState = _allSheepStates.First(state => state is HorrorState);
+            if (horrorState.IsTheDistanceRight(dist))
             {
                 stationStateSwitcher.SwitchState(horrorState);
                 return;
             }
         }
 
-        navMeshAgent.isStopped = false;
         SetDestination();
         SetSpeed();
     }

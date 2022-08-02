@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -12,26 +10,23 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
     [SerializeField] private float escapeSpeed = 4;
     [SerializeField] private float horrorSpeed = 6;
 
-    [Header("Distance")] 
-    [SerializeField] private float horrorDistance = 10;
-    [SerializeField] private float escapeDistance = 15;
-    [SerializeField] private float calmDistance = 20;
+    [Header("Trigger distance")] 
+    [SerializeField] private float triggerHorrorDistance = 10;
+    [SerializeField] private float triggerEscapeDistance = 15;
+    [SerializeField] private float triggerCalmDistance = 20;
 
-    [Header("Time in seconds")] 
-    [SerializeField] private float changeDestinationSecondsOnCalm = 1;
-    [SerializeField] private float changeDestinationSecondsOnEscape = 0.5f;
-    [SerializeField] private float changeDestinationSecondsOnHorror = 2;
+    [Header("Other")] 
+    [SerializeField] private float calmDistanceWalk = 2f;
 
 
     private BaseSheepState[] _allBaseSheepStates;
-
     private BaseSheepState _currentSheepState;
 
     private Transform[] _escapePointsOnHorror;
+    private Transform _player;
 
     private NavMeshAgent _navMeshAgent;
-    
-    private Transform _player;
+
 
 
     private void Start()
@@ -39,28 +34,25 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
         _navMeshAgent = GetComponent<NavMeshAgent>();
 
         _navMeshAgent.stoppingDistance = 1;
-        
+        _navMeshAgent.SetDestination(transform.position);
+
         var currentTransform = transform;
 
         _allBaseSheepStates = new BaseSheepState[]
         {
-            new CalmState(this, 4, calmSpeed, currentTransform, _player, _navMeshAgent,
-                new Vector2(calmDistance, int.MaxValue)),
+            new CalmState(this, calmDistanceWalk, calmSpeed, currentTransform, _player, _navMeshAgent,
+                new Vector2(triggerCalmDistance, int.MaxValue)),
 
             new EscapeState(this, currentTransform, escapeSpeed, _player,
-                _navMeshAgent, new Vector2(horrorDistance, escapeDistance)),
+                _navMeshAgent, new Vector2(triggerHorrorDistance, triggerEscapeDistance)),
 
             new HorrorState(this, currentTransform, horrorSpeed, _player,
-                _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, horrorDistance))
+                _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, triggerHorrorDistance))
         };
 
-        foreach (var baseSheepState in _allBaseSheepStates)
-        {
-            baseSheepState.SetAllSheepStates(_allBaseSheepStates);
-        }
+        foreach (var baseSheepState in _allBaseSheepStates) baseSheepState.SetAllSheepStates(_allBaseSheepStates);
 
         _currentSheepState = _allBaseSheepStates[0];
-        _currentSheepState.Go();
     }
 
     private void Update()
