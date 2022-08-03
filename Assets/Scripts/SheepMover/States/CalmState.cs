@@ -28,8 +28,6 @@ public class CalmState : BaseSheepState
 
     public sealed override void Update()
     {
-        if (!AgentReachedThePoint()) return;
-
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
@@ -45,6 +43,8 @@ public class CalmState : BaseSheepState
                 return;
             }
         }
+        
+        if (!AgentReachedThePoint()) return;
 
         SetDestination();
     }

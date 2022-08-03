@@ -18,15 +18,13 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
     [Header("Other")] 
     [SerializeField] private float calmDistanceWalk = 2f;
 
-
     private BaseSheepState[] _allBaseSheepStates;
     private BaseSheepState _currentSheepState;
 
     private Transform[] _escapePointsOnHorror;
-    private Transform _player;
 
     private NavMeshAgent _navMeshAgent;
-
+    private Transform _player;
 
 
     private void Start()

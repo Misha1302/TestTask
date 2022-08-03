@@ -30,8 +30,6 @@ public class EscapeState : BaseSheepState
 
     public sealed override void Update()
     {
-        if (!AgentReachedThePoint()) return;
-
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
@@ -47,6 +45,8 @@ public class EscapeState : BaseSheepState
                 return;
             }
         }
+        
+        if (!AgentReachedThePoint()) return;
 
         SetDestination();
     }
@@ -70,7 +70,7 @@ public class EscapeState : BaseSheepState
             Physics.Raycast(position, direction, out var hit);
             destinationPoint = hit.point;
 
-            if (Vector3.Distance(position, hit.point) < 5) destinationPoint = GoLeftOrRight(position, direction);
+            //if (Vector3.Distance(position, hit.point) < 5) destinationPoint = GoLeftOrRight(position, direction);
 
             if (++attemptCount != ATTEMPT_LIMIT) continue;
             Debug.LogError($"Sheep has tried {ATTEMPT_LIMIT} times without success to find its way in CalmState mode");

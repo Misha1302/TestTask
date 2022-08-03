@@ -128,6 +128,7 @@ MonoBehaviour:
   triggerEscapeDistance: 15
   triggerCalmDistance: 20
   calmDistanceWalk: 2
+  A: 
 --- !u!54 &1515997921582088243
 Rigidbody:
   m_ObjectHideFlags: 0
