@@ -11,73 +11,83 @@ public class HorrorState : BaseSheepState
     private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
     private BaseSheepState[] _allSheepStates;
+    private BaseSheepState _calmState;
+    private BaseSheepState _escapeState;
 
 
     public HorrorState(IStationStateSwitcher stationStateSwitcher, Transform sheepTransform, float speed,
         Transform playerTransform, Transform[] escapePointsOnHorror, NavMeshAgent navMeshAgent,
         Vector2 minMaxDistanceState)
-        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed)
+        : base(sheepTransform, minMaxDistanceState)
     {
-        this.navMeshAgent = navMeshAgent;
-        this.stationStateSwitcher = stationStateSwitcher;
-
-        this.minMaxDistanceState = minMaxDistanceState;
+        this.speed = speed;
 
         _playerTransform = playerTransform;
         _sheepTransform = sheepTransform;
         _escapePointsOnHorror = escapePointsOnHorror;
-        this.speed = speed;
+        this.navMeshAgent = navMeshAgent;
+        this.stationStateSwitcher = stationStateSwitcher;
 
         _playerTag = _playerTransform.tag;
     }
 
 
-    private protected sealed override IStationStateSwitcher stationStateSwitcher { get; set; }
-    private protected sealed override NavMeshAgent navMeshAgent { get; set; }
-    public sealed override Vector2 minMaxDistanceState { get; }
-
-
-    public sealed override void Go()
+    public sealed override void Update()
     {
-        if (!AgentReachedThePoint()) return;
-        
-        navMeshAgent.isStopped = false;
+        if (!AgentReachedThePoint())
+        {
+            CheckingForAPlayer();
+            return;
+        }
+
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
-            var escapeState = _allSheepStates.First(state => state is EscapeState);
-            if (escapeState.IsTheDistanceRight(dist))
+            if (_escapeState.IsTheDistanceRight(dist))
             {
-                stationStateSwitcher.SwitchState(escapeState);
+                stationStateSwitcher.SwitchState(_escapeState);
                 return;
             }
 
-            var calmState = _allSheepStates.First(state => state is CalmState);
-            if (calmState.IsTheDistanceRight(dist))
+            if (_calmState.IsTheDistanceRight(dist))
             {
-                stationStateSwitcher.SwitchState(calmState);
+                stationStateSwitcher.SwitchState(_calmState);
                 return;
             }
         }
 
-        navMeshAgent.isStopped = false;
         SetDestination();
-        SetSpeed();
     }
 
-    public sealed override void StopState()
+    private void CheckingForAPlayer()
     {
-        navMeshAgent.isStopped = true;
+        if (!Physics.Linecast(_sheepTransform.position, navMeshAgent.destination, out var hit)) return;
+        
+        if (hit.transform.CompareTag(_playerTag))
+            SetDestination();
     }
 
     public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
+        _calmState = _allSheepStates.First(state => state is CalmState);
+        _escapeState = _allSheepStates.First(state => state is EscapeState);
     }
 
     private protected sealed override void SetDestination()
     {
-        navMeshAgent.SetDestination(GetRandomDestination());
+        Vector3 randomDestination;
+        var attemptCount = 0;
+        do
+        {
+            randomDestination = GetRandomDestination();
+
+            if (++attemptCount != ATTEMPT_LIMIT) continue;
+            Debug.LogError($"Sheep has tried {ATTEMPT_LIMIT} times without success to find its way in CalmState mode");
+            break;
+        } while (!CanWalkTo(randomDestination));
+
+        navMeshAgent.SetDestination(randomDestination);
     }
 
     private Vector3 GetRandomDestination()

@@ -4,97 +4,90 @@ using UnityEngine.AI;
 
 public class EscapeState : BaseSheepState
 {
-    private readonly Transform _playerTransform;
     private readonly string _playerTag;
+    private readonly Transform _playerTransform;
     private readonly Transform _sheepTransform;
     private BaseSheepState[] _allSheepStates;
+    private BaseSheepState _calmState;
+    private BaseSheepState _horrorState;
 
 
     public EscapeState(IStationStateSwitcher stationStateSwitcher, Transform sheepTransform, float speed,
         Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState)
-        : base(stationStateSwitcher, navMeshAgent, minMaxDistanceState, speed)
+        : base(sheepTransform, minMaxDistanceState)
     {
-        this.navMeshAgent = navMeshAgent;
-        this.stationStateSwitcher = stationStateSwitcher;
-
-        this.minMaxDistanceState = minMaxDistanceState;
+        this.speed = speed;
 
         _playerTransform = playerTransform;
         _sheepTransform = sheepTransform;
-        this.speed = speed;
+        this.navMeshAgent = navMeshAgent;
+        this.stationStateSwitcher = stationStateSwitcher;
 
         _playerTag = playerTransform.tag;
     }
 
 
-    private protected sealed override IStationStateSwitcher stationStateSwitcher { get; set; }
-    private protected sealed override NavMeshAgent navMeshAgent { get; set; }
-    public sealed override Vector2 minMaxDistanceState { get; }
 
-
-    public sealed override void Go()
+    public sealed override void Update()
     {
         if (!AgentReachedThePoint()) return;
-        
-        navMeshAgent.isStopped = false;
+
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
-            var horrorState = _allSheepStates.First(state => state is HorrorState);
-            if (horrorState.IsTheDistanceRight(dist))
+            if (_horrorState.IsTheDistanceRight(dist))
             {
-                stationStateSwitcher.SwitchState(horrorState);
+                stationStateSwitcher.SwitchState(_horrorState);
                 return;
             }
 
-            var calmState = _allSheepStates.First(state => state is CalmState);
-            if (calmState.IsTheDistanceRight(dist))
+            if (_calmState.IsTheDistanceRight(dist))
             {
-                stationStateSwitcher.SwitchState(calmState);
+                stationStateSwitcher.SwitchState(_calmState);
                 return;
             }
         }
 
         SetDestination();
-        SetSpeed();
-    }
-
-    public sealed override void StopState()
-    {
-        navMeshAgent.isStopped = true;
     }
 
     public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
+        _calmState = _allSheepStates.First(state => state is CalmState);
+        _horrorState = _allSheepStates.First(state => state is HorrorState);
     }
 
     private protected sealed override void SetDestination()
     {
         var position = _sheepTransform.position;
-        // there is no point in checking the hit of the raycast because it will hit the wall anyway
         var direction = position - _playerTransform.position;
-        Physics.Raycast(position, direction, out var hit);
 
-        if (Vector3.Distance(position, hit.point) < 5)
+        Vector3 destinationPoint;
+        var attemptCount = 0;
+        do
         {
-            direction.x += 90;
-            Physics.Raycast(position, direction, out hit);
-            if (!hit.transform.CompareTag(_playerTag))
-            {
-                navMeshAgent.SetDestination(hit.point);
-            }
-            else
-            {
-                direction.x -= 180;
-                Physics.Raycast(position, direction, out hit);
-                navMeshAgent.SetDestination(hit.point);
-            }
+            Physics.Raycast(position, direction, out var hit);
+            destinationPoint = hit.point;
 
-            return;
-        }
+            if (Vector3.Distance(position, hit.point) < 5) destinationPoint = GoLeftOrRight(position, direction);
 
+            if (++attemptCount != ATTEMPT_LIMIT) continue;
+            Debug.LogError($"Sheep has tried {ATTEMPT_LIMIT} times without success to find its way in CalmState mode");
+            break;
+        } while (!CanWalkTo(destinationPoint));
 
-        navMeshAgent.SetDestination(hit.point);
+        navMeshAgent.SetDestination(destinationPoint);
+    }
+
+    private Vector3 GoLeftOrRight(Vector3 position, Vector3 direction)
+    {
+        direction.x += 90;
+        Physics.Raycast(position, direction, out var hit);
+        if (!hit.transform.CompareTag(_playerTag)) return hit.point;
+
+        direction.x -= 180;
+        Physics.Raycast(position, direction, out hit);
+        return hit.point;
     }
 }

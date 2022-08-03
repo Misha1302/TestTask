@@ -38,7 +38,6 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
 
         var currentTransform = transform;
 
-        print(3.40282347E+38f);
         _allBaseSheepStates = new BaseSheepState[]
         {
             new CalmState(this, calmDistanceWalk, calmSpeed, currentTransform, _player, _navMeshAgent,
@@ -54,11 +53,12 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
         foreach (var baseSheepState in _allBaseSheepStates) baseSheepState.SetAllSheepStates(_allBaseSheepStates);
 
         _currentSheepState = _allBaseSheepStates[0];
+        _currentSheepState.Start();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        _currentSheepState.Go();
+        _currentSheepState.Update();
     }
 
     private void OnDrawGizmos()
@@ -70,7 +70,7 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
     {
         _currentSheepState.StopState();
         _currentSheepState = sheepState;
-        _currentSheepState.Go();
+        _currentSheepState.Start();
     }
 
 
