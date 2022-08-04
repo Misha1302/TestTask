@@ -26,7 +26,7 @@ public class CalmState : BaseSheepState
     }
 
 
-    public sealed override void Update()
+    public override void Update()
     {
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
@@ -49,14 +49,14 @@ public class CalmState : BaseSheepState
         SetDestination();
     }
 
-    public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    public override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
         _escapeState = _allSheepStates.First(state => state is EscapeState);
         _horrorState = _allSheepStates.First(state => state is HorrorState);
     }
 
-    private protected sealed override void SetDestination()
+    private protected override void SetDestination()
     {
         var position = _sheepTransform.position;
         Vector3 randomDestination;

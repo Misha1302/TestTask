@@ -32,7 +32,7 @@ public class HorrorState : BaseSheepState
     }
 
 
-    public sealed override void Update()
+    public override void Update()
     {
         if (!AgentReachedThePoint())
         {
@@ -67,14 +67,14 @@ public class HorrorState : BaseSheepState
             SetDestination();
     }
 
-    public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    public override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
         _calmState = _allSheepStates.First(state => state is CalmState);
         _escapeState = _allSheepStates.First(state => state is EscapeState);
     }
 
-    private protected sealed override void SetDestination()
+    private protected override void SetDestination()
     {
         Vector3 randomDestination;
         var attemptCount = 0;

@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 public abstract class BaseSheepState
 {
-    private protected const int ATTEMPT_LIMIT = 30;
+    private protected const int ATTEMPT_LIMIT = 10;
     private readonly Transform _sheepTransform;
     private protected NavMeshAgent navMeshAgent;
 

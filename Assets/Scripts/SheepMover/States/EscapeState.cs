@@ -28,7 +28,7 @@ public class EscapeState : BaseSheepState
 
 
 
-    public sealed override void Update()
+    public override void Update()
     {
         var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
         if (!IsTheDistanceRight(dist))
@@ -51,14 +51,14 @@ public class EscapeState : BaseSheepState
         SetDestination();
     }
 
-    public sealed override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    public override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
     {
         _allSheepStates = baseSheepStates;
         _calmState = _allSheepStates.First(state => state is CalmState);
         _horrorState = _allSheepStates.First(state => state is HorrorState);
     }
 
-    private protected sealed override void SetDestination()
+    private protected override void SetDestination()
     {
         var position = _sheepTransform.position;
         var direction = position - _playerTransform.position;
@@ -69,25 +69,12 @@ public class EscapeState : BaseSheepState
         {
             Physics.Raycast(position, direction, out var hit);
             destinationPoint = hit.point;
-
-            //if (Vector3.Distance(position, hit.point) < 5) destinationPoint = GoLeftOrRight(position, direction);
-
+            
             if (++attemptCount != ATTEMPT_LIMIT) continue;
             Debug.LogError($"Sheep has tried {ATTEMPT_LIMIT} times without success to find its way in CalmState mode");
             break;
         } while (!CanWalkTo(destinationPoint));
 
         navMeshAgent.SetDestination(destinationPoint);
-    }
-
-    private Vector3 GoLeftOrRight(Vector3 position, Vector3 direction)
-    {
-        direction.x += 90;
-        Physics.Raycast(position, direction, out var hit);
-        if (!hit.transform.CompareTag(_playerTag)) return hit.point;
-
-        direction.x -= 180;
-        Physics.Raycast(position, direction, out hit);
-        return hit.point;
     }
 }
