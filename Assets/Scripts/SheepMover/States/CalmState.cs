@@ -9,8 +9,6 @@ public class CalmState : BaseSheepState
         Transform sheepTransform, Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState)
         : base(sheepTransform, playerTransform, minMaxDistanceState, stationStateSwitcher, speed, navMeshAgent)
     {
-        this.speed = speed;
-
         _distanceWalk = distanceWalk;
     }
 
@@ -18,25 +16,25 @@ public class CalmState : BaseSheepState
     public override void Update()
     {
         var dist = Vector3.Distance(playerTransform.position, sheepTransform.position);
-        if (!IsTheDistanceRight(dist))
-            if (dist < minMaxDistanceState.x)
-            {
-                stationStateSwitcher.SwitchState<EscapeState>();
-                return;
-            }
+        if (dist < minMaxDistanceState.x)
+        {
+            stationStateSwitcher.SwitchState<EscapeState>();
+            return;
+        }
 
         if (!AgentReachedToThePoint()) return;
 
         SetDestination();
     }
 
-    protected override void SetDestination()
+    protected override Vector3 GetDestination()
     {
-        var position = sheepTransform.position;
         Vector3 randomDestination;
         var attemptCount = 0;
         do
         {
+            var position = sheepTransform.position;
+
             randomDestination = new Vector3
             {
                 x = Random.Range(position.x - _distanceWalk, position.x + _distanceWalk),
@@ -49,7 +47,6 @@ public class CalmState : BaseSheepState
             break;
         } while (!CanWalkTo(randomDestination));
 
-
-        navMeshAgent.SetDestination(randomDestination);
+        return randomDestination;
     }
 }

@@ -5,26 +5,26 @@ public abstract class BaseSheepState
 {
     protected const int ATTEMPT_LIMIT = 10;
 
-    protected readonly Vector2 minMaxDistanceState;
-
     private readonly NavMeshPath _path = new();
+    private readonly float _speed;
+
+    protected readonly Vector2 minMaxDistanceState;
+    protected readonly NavMeshAgent navMeshAgent;
     protected readonly Transform playerTransform;
     protected readonly Transform sheepTransform;
 
     protected readonly IStationStateSwitcher stationStateSwitcher;
-    protected readonly NavMeshAgent navMeshAgent;
-
-    protected float speed;
 
     protected BaseSheepState(Transform sheepTransform, Transform playerTransform, Vector2 minMaxDistanceState,
         IStationStateSwitcher stationStateSwitcher, float speed, NavMeshAgent navMeshAgent)
     {
         this.sheepTransform = sheepTransform;
         this.stationStateSwitcher = stationStateSwitcher;
-        this.speed = speed;
         this.navMeshAgent = navMeshAgent;
         this.playerTransform = playerTransform;
         this.minMaxDistanceState = minMaxDistanceState;
+
+        _speed = speed;
     }
 
 
@@ -37,11 +37,6 @@ public abstract class BaseSheepState
 
     public abstract void Update();
 
-    protected bool IsTheDistanceRight(float playerDistance)
-    {
-        return playerDistance >= minMaxDistanceState.x && playerDistance <= minMaxDistanceState.y;
-    }
-
     public void Stop()
     {
         navMeshAgent.isStopped = true;
@@ -53,11 +48,16 @@ public abstract class BaseSheepState
         return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
     }
 
-    protected abstract void SetDestination();
+    protected void SetDestination()
+    {
+        navMeshAgent.SetDestination(GetDestination());
+    }
+
+    protected abstract Vector3 GetDestination();
 
     private void SetSpeed()
     {
-        navMeshAgent.speed = speed;
+        navMeshAgent.speed = _speed;
     }
 
     protected bool CanWalkTo(Vector3 destination)
