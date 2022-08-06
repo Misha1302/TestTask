@@ -5,8 +5,8 @@ public class CalmState : BaseSheepState
 {
     private readonly float _distanceWalk;
 
-    public CalmState(IStationStateSwitcher stationStateSwitcher, float distanceWalk, float speed,
-        Transform sheepTransform, Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState)
+    public CalmState(Transform sheepTransform, Transform playerTransform, Vector2 minMaxDistanceState,
+        IStationStateSwitcher stationStateSwitcher, float speed, NavMeshAgent navMeshAgent, float distanceWalk)
         : base(sheepTransform, playerTransform, minMaxDistanceState, stationStateSwitcher, speed, navMeshAgent)
     {
         _distanceWalk = distanceWalk;

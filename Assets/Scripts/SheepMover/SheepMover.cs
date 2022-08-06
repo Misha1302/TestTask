@@ -6,18 +6,18 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class SheepMover : MonoBehaviour, IStationStateSwitcher
 {
-    [Header("Speed")] 
-    [SerializeField] private float calmSpeed = 0.75f;
+    [Header("Speed")] [SerializeField] private float calmSpeed = 0.75f;
+
     [SerializeField] private float escapeSpeed = 4;
     [SerializeField] private float horrorSpeed = 8;
 
-    [Header("Trigger distance")] 
-    [SerializeField] private float triggerHorrorDistance = 10;
+    [Header("Trigger distance")] [SerializeField]
+    private float triggerHorrorDistance = 10;
+
     [SerializeField] private float triggerEscapeDistance = 15;
     [SerializeField] private float triggerCalmDistance = 20;
 
-    [Header("Other")] 
-    [SerializeField] private float calmDistanceWalk = 2f;
+    [Header("Other")] [SerializeField] private float calmDistanceWalk = 2f;
 
     private BaseSheepState[] _allBaseSheepStates;
     private BaseSheepState _currentSheepState;
@@ -39,14 +39,14 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
 
         _allBaseSheepStates = new BaseSheepState[]
         {
-            new CalmState(this, calmDistanceWalk, calmSpeed, currentTransform, _player, _navMeshAgent,
-                new Vector2(triggerCalmDistance, float.MaxValue)),
+            new CalmState(currentTransform, _player, new Vector2(triggerCalmDistance, float.MaxValue), this, calmSpeed,
+                _navMeshAgent, calmDistanceWalk),
 
-            new EscapeState(this, currentTransform, escapeSpeed, _player,
-                _navMeshAgent, new Vector2(triggerHorrorDistance, triggerEscapeDistance)),
+            new EscapeState(currentTransform, _player, new Vector2(triggerEscapeDistance, triggerCalmDistance), this,
+                escapeSpeed, _navMeshAgent),
 
-            new HorrorState(this, currentTransform, horrorSpeed, _player,
-                _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, triggerHorrorDistance))
+            new HorrorState(currentTransform, _player, new Vector2(-1, triggerHorrorDistance), this,
+                horrorSpeed, _navMeshAgent, _escapePointsOnHorror)
         };
 
         _currentSheepState = _allBaseSheepStates[0];
