@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 public class EscapeState : BaseSheepState
 {
-    public EscapeState(Transform sheepTransform, Transform playerTransform, Vector2 minMaxDistanceState,
+    public EscapeState(Transform sheepTransform, Transform playerTransform, (float minDistance, float maxDistance) minMaxDistanceState,
         IStationStateSwitcher stationStateSwitcher, float speed, NavMeshAgent navMeshAgent)
         : base(sheepTransform, playerTransform, minMaxDistanceState, stationStateSwitcher, speed, navMeshAgent)
     {
@@ -12,16 +12,16 @@ public class EscapeState : BaseSheepState
 
     public override void Update()
     {
-        var dist = Vector3.Distance(playerTransform.position, sheepTransform.position);
-        if (dist < minMaxDistanceState.x)
+        var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
+        if (dist < _minMaxDistanceState.minDistance)
         {
-            stationStateSwitcher.SwitchState<HorrorState>();
+            _stationStateSwitcher.SwitchState<HorrorState>();
             return;
         }
 
-        if (dist > minMaxDistanceState.y)
+        if (dist > _minMaxDistanceState.maxDistance)
         {
-            stationStateSwitcher.SwitchState<CalmState>();
+            _stationStateSwitcher.SwitchState<CalmState>();
             return;
         }
 
@@ -36,8 +36,8 @@ public class EscapeState : BaseSheepState
         var attemptCount = 0;
         do
         {
-            var position = sheepTransform.position;
-            var direction = position - playerTransform.position;
+            var position = _sheepTransform.position;
+            var direction = position - _playerTransform.position;
             direction.y += Random.Range(-5, 6);
             Physics.Raycast(position, direction, out var hit);
             randomDestination = hit.point;

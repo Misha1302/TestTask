@@ -5,24 +5,24 @@ public abstract class BaseSheepState
 {
     protected const int ATTEMPT_LIMIT = 10;
 
+    protected readonly (float minDistance, float maxDistance) _minMaxDistanceState;
+    protected readonly NavMeshAgent _navMeshAgent;
+
     private readonly NavMeshPath _path = new();
+    protected readonly Transform _playerTransform;
+    protected readonly Transform _sheepTransform;
     private readonly float _speed;
 
-    protected readonly Vector2 minMaxDistanceState;
-    protected readonly NavMeshAgent navMeshAgent;
-    protected readonly Transform playerTransform;
-    protected readonly Transform sheepTransform;
+    protected readonly IStationStateSwitcher _stationStateSwitcher;
 
-    protected readonly IStationStateSwitcher stationStateSwitcher;
-
-    protected BaseSheepState(Transform sheepTransform, Transform playerTransform, Vector2 minMaxDistanceState,
+    protected BaseSheepState(Transform sheepTransform, Transform playerTransform, (float minDistance, float maxDistance) minMaxDistanceState,
         IStationStateSwitcher stationStateSwitcher, float speed, NavMeshAgent navMeshAgent)
     {
-        this.sheepTransform = sheepTransform;
-        this.stationStateSwitcher = stationStateSwitcher;
-        this.navMeshAgent = navMeshAgent;
-        this.playerTransform = playerTransform;
-        this.minMaxDistanceState = minMaxDistanceState;
+        _sheepTransform = sheepTransform;
+        _stationStateSwitcher = stationStateSwitcher;
+        _navMeshAgent = navMeshAgent;
+        _playerTransform = playerTransform;
+        _minMaxDistanceState = minMaxDistanceState;
 
         _speed = speed;
     }
@@ -30,7 +30,7 @@ public abstract class BaseSheepState
 
     public void Start()
     {
-        navMeshAgent.isStopped = false;
+        _navMeshAgent.isStopped = false;
         SetDestination();
         SetSpeed();
     }
@@ -39,30 +39,30 @@ public abstract class BaseSheepState
 
     public void Stop()
     {
-        navMeshAgent.isStopped = true;
-        navMeshAgent.SetDestination(sheepTransform.position);
+        _navMeshAgent.isStopped = true;
+        _navMeshAgent.SetDestination(_sheepTransform.position);
     }
 
     protected bool AgentReachedToThePoint()
     {
-        return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
+        return _navMeshAgent.remainingDistance <= _navMeshAgent.stoppingDistance;
     }
 
     protected void SetDestination()
     {
-        navMeshAgent.SetDestination(GetDestination());
+        _navMeshAgent.SetDestination(GetDestination());
     }
 
     protected abstract Vector3 GetDestination();
 
     private void SetSpeed()
     {
-        navMeshAgent.speed = _speed;
+        _navMeshAgent.speed = _speed;
     }
 
     protected bool CanWalkTo(Vector3 destination)
     {
-        NavMesh.CalculatePath(sheepTransform.position, destination, NavMesh.AllAreas, _path);
+        NavMesh.CalculatePath(_sheepTransform.position, destination, NavMesh.AllAreas, _path);
         return _path.status == NavMeshPathStatus.PathComplete;
     }
 }
