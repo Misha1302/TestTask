@@ -1,4 +1,4 @@
 public interface IStationStateSwitcher
 {
-    void SwitchState(BaseSheepState sheepState);
+    public void SwitchState<T>() where T : BaseSheepState;
 }

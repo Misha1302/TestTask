@@ -1,67 +1,42 @@
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EscapeState : BaseSheepState
 {
-    private readonly string _playerTag;
-    private readonly Transform _playerTransform;
-    private readonly Transform _sheepTransform;
-    private BaseSheepState[] _allSheepStates;
-    private BaseSheepState _calmState;
-    private BaseSheepState _horrorState;
-
-
     public EscapeState(IStationStateSwitcher stationStateSwitcher, Transform sheepTransform, float speed,
         Transform playerTransform, NavMeshAgent navMeshAgent, Vector2 minMaxDistanceState)
-        : base(sheepTransform, minMaxDistanceState)
+        : base(sheepTransform, playerTransform, minMaxDistanceState, stationStateSwitcher, speed, navMeshAgent)
     {
-        this.speed = speed;
-
-        _playerTransform = playerTransform;
-        _sheepTransform = sheepTransform;
-        this.navMeshAgent = navMeshAgent;
-        this.stationStateSwitcher = stationStateSwitcher;
-
-        _playerTag = playerTransform.tag;
     }
-
 
 
     public override void Update()
     {
-        var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
+        var dist = Vector3.Distance(playerTransform.position, sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
-            if (_horrorState.IsTheDistanceRight(dist))
+            if(dist < minMaxDistanceState.x)
             {
-                stationStateSwitcher.SwitchState(_horrorState);
+                stationStateSwitcher.SwitchState<HorrorState>();
                 return;
             }
 
-            if (_calmState.IsTheDistanceRight(dist))
+            if (dist > minMaxDistanceState.y)
             {
-                stationStateSwitcher.SwitchState(_calmState);
+                stationStateSwitcher.SwitchState<CalmState>();
                 return;
             }
         }
-        
-        if (!AgentReachedThePoint()) return;
+
+        if (!AgentReachedToThePoint()) return;
 
         SetDestination();
     }
 
-    public override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
+    protected override void SetDestination()
     {
-        _allSheepStates = baseSheepStates;
-        _calmState = _allSheepStates.First(state => state is CalmState);
-        _horrorState = _allSheepStates.First(state => state is HorrorState);
-    }
-
-    private protected override void SetDestination()
-    {
-        var position = _sheepTransform.position;
-        var direction = position - _playerTransform.position;
+        var position = sheepTransform.position;
+        var direction = position - playerTransform.position;
 
         Vector3 destinationPoint;
         var attemptCount = 0;
@@ -69,7 +44,7 @@ public class EscapeState : BaseSheepState
         {
             Physics.Raycast(position, direction, out var hit);
             destinationPoint = hit.point;
-            
+
             if (++attemptCount != ATTEMPT_LIMIT) continue;
             Debug.LogError($"Sheep has tried {ATTEMPT_LIMIT} times without success to find its way in CalmState mode");
             break;

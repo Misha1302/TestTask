@@ -8,50 +8,32 @@ public class HorrorState : BaseSheepState
     private readonly Transform[] _escapePointsOnHorror;
 
     private readonly string _playerTag;
-    private readonly Transform _playerTransform;
-    private readonly Transform _sheepTransform;
-    private BaseSheepState[] _allSheepStates;
-    private BaseSheepState _calmState;
-    private BaseSheepState _escapeState;
 
 
     public HorrorState(IStationStateSwitcher stationStateSwitcher, Transform sheepTransform, float speed,
         Transform playerTransform, Transform[] escapePointsOnHorror, NavMeshAgent navMeshAgent,
         Vector2 minMaxDistanceState)
-        : base(sheepTransform, minMaxDistanceState)
+        : base(sheepTransform, playerTransform, minMaxDistanceState, stationStateSwitcher, speed, navMeshAgent)
     {
-        this.speed = speed;
-
-        _playerTransform = playerTransform;
-        _sheepTransform = sheepTransform;
         _escapePointsOnHorror = escapePointsOnHorror;
-        this.navMeshAgent = navMeshAgent;
-        this.stationStateSwitcher = stationStateSwitcher;
-
-        _playerTag = _playerTransform.tag;
+        _playerTag = playerTransform.tag;
     }
 
 
     public override void Update()
     {
-        if (!AgentReachedThePoint())
+        if (!AgentReachedToThePoint())
         {
             CheckingForAPlayer();
             return;
         }
 
-        var dist = Vector3.Distance(_playerTransform.position, _sheepTransform.position);
+        var dist = Vector3.Distance(playerTransform.position, sheepTransform.position);
         if (!IsTheDistanceRight(dist))
         {
-            if (_escapeState.IsTheDistanceRight(dist))
+            if(dist > minMaxDistanceState.y)
             {
-                stationStateSwitcher.SwitchState(_escapeState);
-                return;
-            }
-
-            if (_calmState.IsTheDistanceRight(dist))
-            {
-                stationStateSwitcher.SwitchState(_calmState);
+                stationStateSwitcher.SwitchState<EscapeState>();
                 return;
             }
         }
@@ -61,20 +43,13 @@ public class HorrorState : BaseSheepState
 
     private void CheckingForAPlayer()
     {
-        if (!Physics.Linecast(_sheepTransform.position, navMeshAgent.destination, out var hit)) return;
-        
+        if (!Physics.Linecast(sheepTransform.position, navMeshAgent.destination, out var hit)) return;
+
         if (hit.transform.CompareTag(_playerTag))
             SetDestination();
     }
 
-    public override void SetAllSheepStates(BaseSheepState[] baseSheepStates)
-    {
-        _allSheepStates = baseSheepStates;
-        _calmState = _allSheepStates.First(state => state is CalmState);
-        _escapeState = _allSheepStates.First(state => state is EscapeState);
-    }
-
-    private protected override void SetDestination()
+    protected override void SetDestination()
     {
         Vector3 randomDestination;
         var attemptCount = 0;
@@ -94,7 +69,7 @@ public class HorrorState : BaseSheepState
     {
         var nearestPoints = GetNearestPoints();
         for (var i = 1; i < nearestPoints.Count; i++)
-            if (Physics.Linecast(_sheepTransform.position, nearestPoints[i].escapePointOnHorror.position, out var hit))
+            if (Physics.Linecast(sheepTransform.position, nearestPoints[i].escapePointOnHorror.position, out var hit))
             {
                 if (!hit.transform.CompareTag(_playerTag))
                     return nearestPoints[i].escapePointOnHorror.position;
@@ -110,7 +85,7 @@ public class HorrorState : BaseSheepState
     private List<(float distance, Transform escapePointOnHorror)> GetNearestPoints()
     {
         var nearestPointsList = (from escapePointOnHorror in _escapePointsOnHorror
-            let distance = Vector3.Distance(escapePointOnHorror.position, _sheepTransform.position)
+            let distance = Vector3.Distance(escapePointOnHorror.position, sheepTransform.position)
             select (distance, escapePointOnHorror)).ToList();
 
         for (var j = 1; j < nearestPointsList.Count; j++)

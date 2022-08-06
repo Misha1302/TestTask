@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -48,13 +49,11 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
                 _escapePointsOnHorror, _navMeshAgent, new Vector2(-1, triggerHorrorDistance))
         };
 
-        foreach (var baseSheepState in _allBaseSheepStates) baseSheepState.SetAllSheepStates(_allBaseSheepStates);
-
         _currentSheepState = _allBaseSheepStates[0];
         _currentSheepState.Start();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         _currentSheepState.Update();
     }
@@ -64,10 +63,10 @@ public class SheepMover : MonoBehaviour, IStationStateSwitcher
         Gizmos.DrawLine(transform.position, _navMeshAgent.destination);
     }
 
-    public void SwitchState(BaseSheepState sheepState)
+    public void SwitchState<T>() where T : BaseSheepState
     {
-        _currentSheepState.StopState();
-        _currentSheepState = sheepState;
+        _currentSheepState.Stop();
+        _currentSheepState = _allBaseSheepStates.First(state => state is T);
         _currentSheepState.Start();
     }
 

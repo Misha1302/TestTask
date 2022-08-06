@@ -3,24 +3,29 @@ using UnityEngine.AI;
 
 public abstract class BaseSheepState
 {
-    private protected const int ATTEMPT_LIMIT = 10;
-    private readonly Transform _sheepTransform;
-    private protected NavMeshAgent navMeshAgent;
+    protected const int ATTEMPT_LIMIT = 10;
+
+    protected readonly Vector2 minMaxDistanceState;
 
     private readonly NavMeshPath _path = new();
+    protected readonly Transform playerTransform;
+    protected readonly Transform sheepTransform;
 
-    private protected float speed;
+    protected readonly IStationStateSwitcher stationStateSwitcher;
+    protected readonly NavMeshAgent navMeshAgent;
 
+    protected float speed;
 
-    private protected IStationStateSwitcher stationStateSwitcher;
-
-    private protected BaseSheepState(Transform sheepTransform, Vector2 minMaxDistanceState)
+    protected BaseSheepState(Transform sheepTransform, Transform playerTransform, Vector2 minMaxDistanceState,
+        IStationStateSwitcher stationStateSwitcher, float speed, NavMeshAgent navMeshAgent)
     {
-        _sheepTransform = sheepTransform;
-        _minMaxDistanceState = minMaxDistanceState;
+        this.sheepTransform = sheepTransform;
+        this.stationStateSwitcher = stationStateSwitcher;
+        this.speed = speed;
+        this.navMeshAgent = navMeshAgent;
+        this.playerTransform = playerTransform;
+        this.minMaxDistanceState = minMaxDistanceState;
     }
-
-    private readonly Vector2 _minMaxDistanceState;
 
 
     public void Start()
@@ -32,34 +37,32 @@ public abstract class BaseSheepState
 
     public abstract void Update();
 
-    public abstract void SetAllSheepStates(BaseSheepState[] baseSheepStates);
-
-    public bool IsTheDistanceRight(float playerDistance)
+    protected bool IsTheDistanceRight(float playerDistance)
     {
-        return playerDistance >= _minMaxDistanceState.x && playerDistance <= _minMaxDistanceState.y;
+        return playerDistance >= minMaxDistanceState.x && playerDistance <= minMaxDistanceState.y;
     }
 
-    public void StopState()
+    public void Stop()
     {
         navMeshAgent.isStopped = true;
-        navMeshAgent.SetDestination(_sheepTransform.position);
+        navMeshAgent.SetDestination(sheepTransform.position);
     }
 
-    private protected bool AgentReachedThePoint()
+    protected bool AgentReachedToThePoint()
     {
         return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
     }
 
-    private protected abstract void SetDestination();
+    protected abstract void SetDestination();
 
     private void SetSpeed()
     {
         navMeshAgent.speed = speed;
     }
 
-    private protected bool CanWalkTo(Vector3 destination)
+    protected bool CanWalkTo(Vector3 destination)
     {
-        NavMesh.CalculatePath(_sheepTransform.position, destination, NavMesh.AllAreas, _path);
+        NavMesh.CalculatePath(sheepTransform.position, destination, NavMesh.AllAreas, _path);
         return _path.status == NavMeshPathStatus.PathComplete;
     }
 }
